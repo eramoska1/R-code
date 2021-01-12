@@ -1,0 +1,99 @@
+###############################
+#   Bank Marketing Data       #
+#   Regularized Regression    #
+#   Evelina Ramoskaite        #
+###############################
+library(car)
+library(glmnet)
+set.seed(123)    # seef for reproducibility
+library(dplyr)   # for data cleaning
+library(psych)   # for function tr() to compute trace of a matrix
+install.packages
+
+#Importing Data
+read.csvlibrary(readr)
+SurveyTrain =read_csv("bankdataset1.csv")
+SurveyTest = read_csv("bank-Test.csv")
+
+
+
+#Splitting into Training and Validation
+
+#######################
+#       Ridge
+#######################
+#preparing variables
+XTrain=as.matrix(SurveyTrain[,1:23])
+YTrain=as.matrix(SurveyTrain[,24])
+
+XTest=as.matrix(SurveyTest[,1:13])
+YTest=as.matrix(SurveyTest[,14])
+
+fitRidge=cv.glmnet(XTrain,YTrain,alpha=0,nfolds=7)
+fitRidge
+plot(fitRidge)
+
+fitRidge$lambda.min
+fitRidge$lambda.1se
+#RMSE on Traning Set
+ridgePred= predict(fitRidge,XTrain,s="lambda.1se")
+rmseRidge=sqrt(mean((ridgePred-YTrain)^2))
+rmseRidge
+#RMSE on Test Set
+ridgePred= predict(fitRidge,XTest,s="lambda.1se")
+rmseRidge=sqrt(mean((ridgePred-YTest)^2))
+rmseRidge
+#ridge R2 Value
+fitRidgeR2=glmnet(XTrain,YTrain,alpha=0,lambda=0.06844982)
+fitRidgeR2
+
+#######################
+#       Lasso
+#######################
+lasso= cv.glmnet(XTrain,YTrain)
+lasso
+print(lasso$lambda.1se)
+coef(lasso,s="lambda.1se")
+plot(lasso)
+#lasso R2 value
+lassoR2=glmnet(XTrain,YTrain,alpha=0,lambda=0.0001733731)
+lassoR2
+#RMSE for Training
+lassopred= predict(lasso,newx=XTrain, s="lambda.1se")
+rmselasso= sqrt(mean((YTrain - lassopred)^2))
+rmselasso
+#RMSE for Test
+lassopred= predict(lasso,newx=XTest, s="lambda.1se")
+rmselasso= sqrt(mean((YTest - lassopred)^2))
+rmselasso
+#######################
+#       Elastic
+#######################
+elastic= cv.glmnet(XTrain, YTrain,alpha=.1, nfolds=7)
+elastic$lambda.1se
+elastic
+#Elastic R2 Value
+ElasticR2=glmnet(XTrain,YTrain,alpha=0,lambda=0.04103459)
+ElasticR2
+#RMSE for Train
+elasticpred=predict(elastic,XTrain,s="lambda.1se")
+rmseelastic= sqrt(mean((elasticpred-YTrain)^2))
+rmseelastic
+#RMSE for Test
+elasticpred=predict(elastic,XTest,s="lambda.1se")
+rmseElastic=sqrt(mean((elasticpred-YTest)^2))
+rmseElastic
+
+# Setting alpha = 0 implements ridge regression
+ridge_cv <- cv.glmnet(X, y, alpha = 0, lambda = lambdas_to_try,
+                      standardize = TRUE, nfolds = 10)
+# Plot cross-validation results
+plot(ridge_cv)
+
+# Best cross-validated lambda
+lambda_cv <- ridge_cv$lambda.min
+# Fit final model, get its sum of squared residuals and multiple R-squared
+model_cv <- glmnet(X, y, alpha = 0, lambda = lambda_cv, standardize = TRUE)
+y_hat_cv <- predict(model_cv, X)
+ssr_cv <- t(y - y_hat_cv) %*% (y - y_hat_cv)
+rsq_ridge_cv <- cor(y, y_hat_cv)^2
