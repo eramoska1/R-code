@@ -1,0 +1,83 @@
+#principal factor analysis
+
+library(car)
+library(corrplot)
+library(ggplot2)
+library(QuantPsych)
+library(foreign)
+library(leaps)
+install.packages("corrplot")
+install.packages("QuantPsyc")
+install.packages("car")
+install.packages("leaps")
+install.packages("lm.beta")
+
+library(psych)     # Has a much better scatterplot matrix function
+library(corrplot)  # A nice correlation matrix visualization
+library(car)       # Misc statistical methods
+library(QuantPsyc) # Misc statistical methods
+library(leaps)     # Gives forward, backward and stepwise
+library(lm.beta) 
+#3
+ = matrix(c(2, -1, -1, 2 ), nrow=2, ncol=2,byrow=TRUE)
+M
+eigen(M)
+N = matrix(c(5.5, 1, 2.5, 1, 7, 1, 2.5, 1, 5.5), nrow=3, ncol=3, byrow=TRUE)
+N
+eigen(N)
+V= matrix(c())
+
+#4 Principal Component analysis 
+# Loading data
+Employment = read.table("Employment.txt",sep="\t",header=TRUE)
+head(Employment)
+
+#initial correlation matrixp plot
+
+c=cor(Employment[,2:10])
+corrplot(c)
+
+#PCA with scaling enabled
+pca = prcomp(Employment[, 2:10], scale=T)
+
+# Plotting 
+plot(pca)      #Scree Plot
+summary(pca)
+abline(1, 0,col="red")# Levels off after the 2nd component
+print(pca)     
+
+# Plotting the re-cast data
+recast = as.data.frame(pca$x)
+plot(recast)
+plot(recast$PC1,recast$PC2, col=Employment$r)
+text(recast$PC1,recast$PC2,labels=Employment$Country)
+
+
+#Principal Factor Analysis
+p3 = principal(Employment[,2:10], rotate="varimax", nfactors=4)
+print(p3$loadings, cutoff=.4, sort=T)
+p3$loadings
+p3$values            # The variances for each component
+p3$communality       # Communalities tell % of variance captured for each variable
+p3$rot.mat           # These are the eigenvectors
+head(p3$scores)   
+#Turkey has the most of PC1, Hungary has the most of PC2
+
+#Testing fit of factor analysis
+fit = factanal(hbatReduced, 4, scores="regression")
+print(fit$loadings, cutoff=.4, sort=T)
+print(fit)            # Chi-square of .113 so we fail to reject that it faithfully 
+fit$correlation       # reproduces the correlation ... note ... not proof!
+
+fit$s
+
+fit = factanal(Employment[,2:10], 1)
+print(fit$loadings, cutoff=.4, sort=T)
+print(fit)           
+fit$correlation       
+
+# What happens if we go to 5?
+fit = factanal(Employment[,2:10], 5)
+print(fit$loadings, cutoff=.4, sort=T)
+print(fit)           
+fit$correlation
